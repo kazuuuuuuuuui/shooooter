@@ -372,7 +372,7 @@ window.onload = function() {
             if (keys[65 /* a */]) { myX -= 2; }
             if (keys[87 /* w */]) { myY -= 2; }
             if (keys[88 /* x */]) { myY += 2; }
-            if (keys[32 /* c */]) {
+            if (keys[67 /* c */]) {
                 if (lastShoot == undefined || 200 < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
                         return !bullet.inUse;
@@ -459,13 +459,13 @@ window.onload = function() {
                 return enemy.isAlive();
             }).length;
 	    
-            if (status == Status.inGame) {
-	    /*
+            if (status == Status.inGame && remainingEnemies <= 0 ) {
+	    
                 status = Status.gameClear;
                 muteSE = true;
 		stage++;
                 numEnemies++;//ŽŸ‚ÌƒXƒe[ƒW‚ÉˆÚ‚é‚Æ‚«‚É‰ÁŽZ‚·‚é“G‚Ì”
-	    */
+	    
             }
 	    
             ctx.font = '20pt Calibri';
