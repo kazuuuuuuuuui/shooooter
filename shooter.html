@@ -83,7 +83,7 @@ function Enemy(canvas) {
     var x, y;
     var vx, vy;
 
-    var life = 1;
+    var life = 3;
     var dying = false;
     var explode = new Explode();
 
@@ -231,7 +231,7 @@ function Enemy(canvas) {
 
         if (dying) return;
 
-	    hit++; 
+	    //hit++; 
         dying = true;
         playSE(explosionAudio);
         explode.reset();
@@ -263,6 +263,8 @@ function init(canvas, n) {
         enemies.push(new Enemy(canvas));
     }
 }
+
+//var context = canvas.getContext('2d');
 
 window.onload = function() {
 
@@ -401,8 +403,16 @@ window.onload = function() {
             if (keys[68 /* d */]) { myX += 2; }
             if (keys[65 /* a */]) { myX -= 2; }
             if (keys[87 /* w */]) { myY -= 2; }
-            if (keys[83 /* s */]) { myY += 2; }
-            if (keys[67 /* c */]) {
+            if (keys[88 /* x */]) { myY += 2; }
+        }
+	
+        //2P
+        if (drawOther) {
+            if (keys[76 /* l */]) { otherX += 2; }
+            if (keys[74 /* j */]) { otherX -= 2; }
+            if (keys[73 /* < */]) { otherY -= 2; }
+            if (keys[188 /* i */]) { otherY += 2; }
+	    if (keys[78 /* n */]) {
                 if (lastShoot == undefined || 200 < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
                         return !bullet.inUse;
@@ -414,22 +424,14 @@ window.onload = function() {
                         bullet = {};
                         bullets.push(bullet);
                     }
-                    bullet.x = myX;
-                    bullet.y = myY;
+                    bullet.x = otherX;
+                    bullet.y = otherY;
                     bullet.v = -8;
                     bullet.inUse = true;
                     playSE(shotAudio);
                     lastShoot = tick;
                 }
             }
-        }
-	
-        //2P
-        if (drawOther) {
-            if (keys[76 /* l */]) { otherX += 2; }
-            if (keys[65 /* j */]) { otherX -= 2; }
-            if (keys[87 /* i */]) { otherY -= 2; }
-            if (keys[88 /* < */]) { otherY += 2; }
         }
 
         drawEnemies && enemies.forEach(function(enemy) {
@@ -442,8 +444,8 @@ window.onload = function() {
             if ((enemy.isAlive() && enemy.hit(myX, myY, myR))){
                 explode.reset();
                 enemy.die();
-                //status = Status.dying;
-                //playSE(deadAudio);
+                status = Status.dying;
+                playSE(deadAudio);
             }
         });
 
@@ -452,6 +454,7 @@ window.onload = function() {
         });
 
 	//Ž©‹@‚Ì•`‰æ
+
         if (drawPlayer) {
             ctx.beginPath();
             ctx.fillStyle = 'white';
