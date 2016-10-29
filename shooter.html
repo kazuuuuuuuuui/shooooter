@@ -363,19 +363,20 @@ window.onload = function() {
         case Status.countDown:
             msg = "" + count;
             drawPlayer = true;
-	    drawOther = false;
+	    drawOther = true;
             drawStatus = true;
             break;
         case Status.inGame:
             drawEnemies = true;
             drawPlayer = true;
-	    drawOther = false;
+	    drawOther = true;
             drawStatus = true;
             break;
         case Status.gameClear:
             msg = 'STAGE CLEAR!!!';
             drawEnemies = true;
             drawPlayer = true;
+	    drawOther = true;
             drawStatus = true;
             break;
         case Status.dying:
