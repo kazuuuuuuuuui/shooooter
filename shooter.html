@@ -60,9 +60,15 @@ var bgImg = new Image();
 bgImg.onload = function() {
     bgReady = true;
 };
+
+//プレイヤーの画像
+var playerImg = new Image();
+
 // https://www.nasa.gov/mission_pages/hubble/multimedia/index.html
 //bgImg.src = 'hubble_friday_05062016.jpg';
 bgImg.src = 'bg.jpg';
+
+playerImg.src = '19369816.jpg';
 
 bgmAudio.loop = 'true';
 bgmAudio.play();
@@ -441,7 +447,8 @@ window.onload = function() {
             }
             enemy.draw(ctx);
             if (status != Status.inGame) return;
-            if ((enemy.isAlive() && enemy.hit(myX, myY, myR))){
+            if ((enemy.isAlive() && enemy.hit(myX, myY, myR) 
+		|| enemy.bulletsHit(myX, myY, myR))){
                 explode.reset();
                 enemy.die();
                 status = Status.dying;
@@ -456,10 +463,15 @@ window.onload = function() {
 	//自機の描画
 
         if (drawPlayer) {
+		ctx.drawImage(playerImg,myX,myY);
+
+
+/*
             ctx.beginPath();
             ctx.fillStyle = 'white';
             ctx.arc(myX, myY, myR, 0, Math.PI*2, false);
             ctx.fill();
+*/
         }
 
 	//もう片方
