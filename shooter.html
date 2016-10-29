@@ -76,12 +76,14 @@ var myR = 10.0;
 //今何ステージ目か
 var stage = 1; 
 
+var enemies = [];
+
 function Enemy(canvas) {
 
     var x, y;
     var vx, vy;
 
-    var life = Math.floor(Math.random() * 3 ) + 1;
+    var life = 1;
     var dying = false;
     var explode = new Explode();
 
@@ -170,10 +172,30 @@ function Enemy(canvas) {
     var lastTick;
     var th = Math.PI*Math.random();
 
+    var needsDelete = false;
+
     this.update = function() {
 
-        if (dying && !explode.update()) {
-            dying = false;
+        if (dying) {
+
+// 当たった時点で削除して、
+// explodeは別に配列を作った方が良いかも
+            if (!explode.update()) {
+                dying = false;
+                needsDelete = true;
+
+//                enemies = enemies.filter(function(enemy) {
+//                    return !enemy.needsDelete;
+//                });
+//console.log('enemies length : ' + enemies.length);
+//console.log('-enemies length : ' + enemies.filter(function(enemy) {
+//                    return enemy.needsDelete;
+//                }).length);
+
+                return;
+
+            }
+
         }
 
         if (lastTick == undefined) {
@@ -206,11 +228,15 @@ function Enemy(canvas) {
     };
 
     this.die = function() {
-	hit++; 
+
+        if (dying) return;
+
+	    hit++; 
         dying = true;
         playSE(explosionAudio);
         explode.reset();
-      
+
+        //spawn();
     };
 
     this.damage = function() {
@@ -224,9 +250,12 @@ function Enemy(canvas) {
     this.isAlive = function() {
         return 1 <= life;
     };
-}
 
-var enemies;
+    this.isNeedsDelete = function() {
+        return needsDelete;
+    };
+
+}
 
 function init(canvas, n) {
     enemies = [];
@@ -334,13 +363,13 @@ window.onload = function() {
         case Status.countDown:
             msg = "" + count;
             drawPlayer = true;
-	    drawOther = true;
+	    drawOther = false;
             drawStatus = true;
             break;
         case Status.inGame:
             drawEnemies = true;
             drawPlayer = true;
-	    drawOther = true;
+	    drawOther = false;
             drawStatus = true;
             break;
         case Status.gameClear:
@@ -371,7 +400,7 @@ window.onload = function() {
             if (keys[68 /* d */]) { myX += 2; }
             if (keys[65 /* a */]) { myX -= 2; }
             if (keys[87 /* w */]) { myY -= 2; }
-            if (keys[88 /* x */]) { myY += 2; }
+            if (keys[83 /* s */]) { myY += 2; }
             if (keys[67 /* c */]) {
                 if (lastShoot == undefined || 200 < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
@@ -394,8 +423,8 @@ window.onload = function() {
             }
         }
 	
-	//2P
-	if (drawOther) {
+        //2P
+        if (drawOther) {
             if (keys[76 /* l */]) { otherX += 2; }
             if (keys[65 /* j */]) { otherX -= 2; }
             if (keys[87 /* i */]) { otherY -= 2; }
@@ -412,9 +441,13 @@ window.onload = function() {
             if ((enemy.isAlive() && enemy.hit(myX, myY, myR))){
                 explode.reset();
                 enemy.die();
-                status = Status.dying;
-                playSE(deadAudio);
+                //status = Status.dying;
+                //playSE(deadAudio);
             }
+        });
+
+        enemies = enemies.filter(function(enemy) {
+            return !enemy.isNeedsDelete();
         });
 
 	//自機の描画
@@ -426,7 +459,7 @@ window.onload = function() {
         }
 
 	//もう片方
-	if (drawOther) {
+	    if (drawOther) {
             ctx.beginPath();
             ctx.fillStyle = 'white';
             ctx.arc(otherX, otherY, myR, 0, Math.PI*2, false);
