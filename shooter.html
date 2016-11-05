@@ -87,6 +87,28 @@ var myR = 10.0;
 //今何ステージ目か
 var stage = 1; 
 
+//アイテムの実装
+/*
+function Item(canvas){
+
+  var x,y;
+
+  function spawn(){
+     x = canvas.width*Math.random();
+     y = 0
+  }
+
+  this.draw = function(ctx) {
+    ctx.beginPath();
+    ctx.fillStyle = 'green';
+    var x = this.x;
+    var y = this.y;
+    ctx.arc(x, y, 5, 0, Math.PI*2, false);
+    ctx.fill();
+  };
+}
+*/
+
 var enemies = [];
 
 function Enemy(canvas) {
@@ -425,7 +447,7 @@ window.onload = function() {
             if (keys[65 /* a */]) { myX -= 2; }
             if (keys[87 /* w */]) { myY -= 2; }
             if (keys[88 /* x */]) { myY += 2; }
-	    if (keys[32 /* space */]) {
+	    if (keys[67 /* c */]) {
                 if (lastShoot == undefined || 200 < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
                         return !bullet.inUse;
@@ -483,7 +505,7 @@ window.onload = function() {
 
 	//もう片方
 	if (drawOther) {
-	  ctx.drawImage(player2_Img,otherY - player2_Img.width / 2,otherY - player2_Img.height / 2);
+	  ctx.drawImage(player2_Img,otherX - player2_Img.width / 2,otherY - player2_Img.height / 2);
         }
 
         bullets && bullets.forEach(function(bullet) {
