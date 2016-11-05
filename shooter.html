@@ -62,13 +62,18 @@ bgImg.onload = function() {
 };
 
 //プレイヤーの画像
-var playerImg = new Image();
+//取り合えず雑に後で配列か何かにまとめる
+var player1_Img = new Image();
+var player2_Img = new Image();
+var bullet_Img = new Image();
 
 // https://www.nasa.gov/mission_pages/hubble/multimedia/index.html
 //bgImg.src = 'hubble_friday_05062016.jpg';
-bgImg.src = 'bg.jpg';
+bgImg.src = '20141211215757_094de000_bbcd00_1024.png';
 
-playerImg.src = '19369816.jpg';
+player1_Img.src = '5596310i.png';
+player2_Img.src = '5596311i.png';
+bullet_Img = '160208-heart-top.png';
 
 bgmAudio.loop = 'true';
 bgmAudio.play();
@@ -86,6 +91,15 @@ var enemies = [];
 
 function Enemy(canvas) {
 
+    //ここでやっていい？
+    var img = new Array();
+    img[0] = new Image();
+    img[0].src = "150264c6d523fe4adadf40f118c7ce1a.png";
+    img[1] = new Image();
+    img[1].src = "150264c6d523fe4adadf40f118c7ce1b.png";
+    img[2] = new Image();
+    img[2].src = "150264c6d523fe4adadf40f118c7ce1c.png";
+
     var x, y;
     var vx, vy;
 
@@ -95,7 +109,7 @@ function Enemy(canvas) {
 
     var bullets = [];
  
-    var er = 10; // enemy radius
+    var er = 15; // enemy radius
     var br = 5; // bullet radius
 
     function spawn() {
@@ -115,11 +129,12 @@ function Enemy(canvas) {
 
         if (dying) {
             explode.draw(ctx, x, y);
-        } else if (1 <= life) {
-            ctx.beginPath();
-            ctx.fillStyle = lifeProp[life].color;
-            ctx.arc(x, y, er, 0, Math.PI*2, false);
-            ctx.fill();
+        } else if (life == 3) {
+	    ctx.drawImage(img[0],x - img[0].width / 2,y - img[0].height / 2);
+        }else if (life == 2) {
+	    ctx.drawImage(img[1],x - img[1].width / 2,y - img[1].height / 2);
+        }else if (life == 1) {
+	    ctx.drawImage(img[2],x - img[2].width / 2,y - img[2].height / 2);
         }
 
         bullets.forEach(function(bullet) {
@@ -237,7 +252,7 @@ function Enemy(canvas) {
 
         if (dying) return;
 
-	    //hit++; 
+	    hit++; 
         dying = true;
         playSE(explosionAudio);
         explode.reset();
@@ -410,15 +425,7 @@ window.onload = function() {
             if (keys[65 /* a */]) { myX -= 2; }
             if (keys[87 /* w */]) { myY -= 2; }
             if (keys[88 /* x */]) { myY += 2; }
-        }
-	
-        //2P
-        if (drawOther) {
-            if (keys[76 /* l */]) { otherX += 2; }
-            if (keys[74 /* j */]) { otherX -= 2; }
-            if (keys[73 /* < */]) { otherY -= 2; }
-            if (keys[188 /* i */]) { otherY += 2; }
-	    if (keys[78 /* n */]) {
+	    if (keys[32 /* space */]) {
                 if (lastShoot == undefined || 200 < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
                         return !bullet.inUse;
@@ -430,14 +437,22 @@ window.onload = function() {
                         bullet = {};
                         bullets.push(bullet);
                     }
-                    bullet.x = otherX;
-                    bullet.y = otherY;
+                    bullet.x = myX;
+                    bullet.y = myY;
                     bullet.v = -8;
                     bullet.inUse = true;
                     playSE(shotAudio);
                     lastShoot = tick;
                 }
             }
+        }
+	
+        //2P
+        if (drawOther) {
+            if (keys[76 /* l */]) { otherX += 2; }
+            if (keys[74 /* j */]) { otherX -= 2; }
+            if (keys[73 /* < */]) { otherY -= 2; }
+            if (keys[188 /* i */]) { otherY += 2; }
         }
 
         drawEnemies && enemies.forEach(function(enemy) {
@@ -449,10 +464,10 @@ window.onload = function() {
             if (status != Status.inGame) return;
             if ((enemy.isAlive() && enemy.hit(myX, myY, myR) 
 		|| enemy.bulletsHit(myX, myY, myR))){
-                explode.reset();
-                enemy.die();
-                status = Status.dying;
-                playSE(deadAudio);
+                //explode.reset();
+                //enemy.die();
+                //status = Status.dying;
+                //playSE(deadAudio);
             }
         });
 
@@ -462,24 +477,13 @@ window.onload = function() {
 
 	//自機の描画
 
-        if (drawPlayer) {
-		ctx.drawImage(playerImg,myX,myY);
-
-
-/*
-            ctx.beginPath();
-            ctx.fillStyle = 'white';
-            ctx.arc(myX, myY, myR, 0, Math.PI*2, false);
-            ctx.fill();
-*/
+        if(drawPlayer) {
+	  ctx.drawImage(player1_Img,myX - player1_Img.width / 2,myY - player1_Img.height / 2);
         }
 
 	//もう片方
-	    if (drawOther) {
-            ctx.beginPath();
-            ctx.fillStyle = 'white';
-            ctx.arc(otherX, otherY, myR, 0, Math.PI*2, false);
-            ctx.fill();
+	if (drawOther) {
+	  ctx.drawImage(player2_Img,otherY - player2_Img.width / 2,otherY - player2_Img.height / 2);
         }
 
         bullets && bullets.forEach(function(bullet) {
@@ -491,6 +495,7 @@ window.onload = function() {
             var y = bullet.y;
             ctx.arc(x, y, 5, 0, Math.PI*2, false);
             ctx.fill();
+
             drawEnemies && enemies.forEach(function(enemy) {
                 if (enemy.isAlive() && enemy.hit(x, y, 2)) {
                     enemy.damage();
@@ -518,7 +523,7 @@ window.onload = function() {
             }
 	    
             ctx.font = '20pt Calibri';
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = 'black';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'top';
             var s = "Hit: " + hit;    
@@ -531,7 +536,7 @@ window.onload = function() {
 
         if (msg) {
             ctx.font = '40pt Calibri';
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(msg, canvas.width/2, canvas.height/2);
