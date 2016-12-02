@@ -64,7 +64,6 @@ bgImg.onload = function() {
 //プレイヤーの画像
 //取り合えず雑に後で配列か何かにまとめる
 var player1_Img = new Image();
-var player2_Img = new Image();
 var bullet_Img = new Image();
 
 // https://www.nasa.gov/mission_pages/hubble/multimedia/index.html
@@ -72,48 +71,22 @@ var bullet_Img = new Image();
 bgImg.src = '20141211215757_094de000_bbcd00_1024.png';
 
 player1_Img.src = '5596310i.png';
-player2_Img.src = '5596311i.png';
-bullet_Img = '160208-heart-top.png';
 
 bgmAudio.loop = 'true';
 bgmAudio.play();
 
-//スコア
-var hit = 0;
 
-//プレイヤーの半径
+//grobal
+var towerMaxNum = 1;
+var towerNum = 1;
 var myR = 10.0;
-
-//今何ステージ目か
 var stage = 1; 
 
-//アイテムの実装
-/*
-function Item(canvas){
-
-  var x,y;
-
-  function spawn(){
-     x = canvas.width*Math.random();
-     y = 0
-  }
-
-  this.draw = function(ctx) {
-    ctx.beginPath();
-    ctx.fillStyle = 'green';
-    var x = this.x;
-    var y = this.y;
-    ctx.arc(x, y, 5, 0, Math.PI*2, false);
-    ctx.fill();
-  };
-}
-*/
-
 var enemies = [];
+var towers = [];
 
 function Enemy(canvas) {
 
-    //ここでやっていい？
     var img = new Array();
     img[0] = new Image();
     img[0].src = "150264c6d523fe4adadf40f118c7ce1a.png";
@@ -136,6 +109,7 @@ function Enemy(canvas) {
 
     function spawn() {
         x = canvas.width*Math.random();
+	//x = 0;
         y = -er;
         vx = 0;
         vy = 100*Math.random() + 50;
@@ -245,18 +219,24 @@ function Enemy(canvas) {
             lastTick = Date.now();
         }
 
+	//敵動き
         var tick = Date.now();
         var dt = tick - lastTick;
         if (0 < life) {
+
+           
+
             x += dt*vx/1000;
             x += lifeProp[life].daze*Math.cos(th);
             th += 1.5*dt*2*Math.PI/1000;
             y += dt*vy/1000;
+/*
             if (x < -er
             || canvas.width + er < x
             || canvas.height + er < y) {
                 spawn();
             }
+*/
         }
         bullets.forEach(function(bullet) {
             bullet.x += dt*bullet.vx/1000;
@@ -300,14 +280,72 @@ function Enemy(canvas) {
 
 }
 
+//Tower
+function Tower( canvas ){
+
+  var x,y;
+  var hp;
+
+  var dying = false;
+  var explode = new Explode();
+
+    function spawn(){
+	hp = 1000;
+	x = canvas.width / 2;
+	y = canvas.height / 2;
+    };
+    spawn();
+
+    this.draw = function( ctx ){
+	if(dying){
+	  //explode.draw(ctx, x, y);
+	}else{
+	  ctx.beginPath();
+	  if( hp <=300 ){
+            ctx.fillStyle = 'rgb(255,0,0)';
+	  }else if( hp <=700 ){
+	    ctx.fillStyle = 'rgb(255,255,0)'
+	  }else{
+	    ctx.fillStyle = 'rgb(0,255,0)'
+	  }
+
+          ctx.arc(x, y, 30, 0, Math.PI*2, false);
+          ctx.fill();
+
+ 	  ctx.font = "30px 'ＭＳ ゴシック'";//～px 文字の大きさ
+          ctx.fillStyle = 'black';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(hp, x, y);
+	}
+    }
+
+    this.update = function(){
+	//hp--;
+	if( hp <= 0 ){
+	    this.die();
+	}
+    }
+
+    this.die = function() {
+	if (dying) return;
+	towerNum--;//タワー数減らす
+        dying = true;
+        playSE(explosionAudio);
+        explode.reset();
+    };
+}
+
 function init(canvas, n) {
-    enemies = [];
+    //enemies = [];
     for (var i = 0; i < n; i++) {
         enemies.push(new Enemy(canvas));
     }
-}
 
-//var context = canvas.getContext('2d');
+    towers.push(new Tower( canvas ));
+console.log(towers[0].x);
+
+}
 
 window.onload = function() {
 
@@ -383,7 +421,7 @@ window.onload = function() {
         switch (status) {
         case Status.title:
             msg = 'Press space to start';
-            numEnemies = 3;//敵の数
+            numEnemies = 1;//敵の数
             break;
         case Status.toStart:
             myX = canvas.width/4;
@@ -404,7 +442,7 @@ window.onload = function() {
                     }
                 }, 1000);
             })();
-            //break; // intentionally fall through
+            break; // intentionally fall through
         case Status.countDown:
             msg = "" + count;
             drawPlayer = true;
@@ -469,14 +507,7 @@ window.onload = function() {
             }
         }
 	
-        //2P
-        if (drawOther) {
-            if (keys[76 /* l */]) { otherX += 2; }
-            if (keys[74 /* j */]) { otherX -= 2; }
-            if (keys[73 /* < */]) { otherY -= 2; }
-            if (keys[188 /* i */]) { otherY += 2; }
-        }
-
+	//敵
         drawEnemies && enemies.forEach(function(enemy) {
             enemy.update();
             if (enemy.isAlive()) {
@@ -498,14 +529,8 @@ window.onload = function() {
         });
 
 	//自機の描画
-
         if(drawPlayer) {
 	  ctx.drawImage(player1_Img,myX - player1_Img.width / 2,myY - player1_Img.height / 2);
-        }
-
-	//もう片方
-	if (drawOther) {
-	  ctx.drawImage(player2_Img,otherX - player2_Img.width / 2,otherY - player2_Img.height / 2);
         }
 
         bullets && bullets.forEach(function(bullet) {
@@ -530,6 +555,14 @@ window.onload = function() {
             }
         });
 
+	//タワー
+        towers.forEach(function(tower) {
+                tower.update();
+                tower.draw(ctx);
+               // tower.isHit(myX, myY, myR);
+        });
+
+	//ステータスとか
         if (drawStatus) {
             var remainingEnemies = enemies.filter(function(enemy) {
                 return enemy.isAlive();
@@ -540,15 +573,13 @@ window.onload = function() {
                 status = Status.gameClear;
                 muteSE = true;
 		stage++;
-                numEnemies++;//次のステージに移るときに加算する敵の数
-	    
             }
 	    
             ctx.font = '20pt Calibri';
             ctx.fillStyle = 'black';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'top';
-            var s = "Hit: " + hit;    
+            var s = "Tower: " + towerNum+"/"+towerMaxNum;    
             ctx.fillText(s, canvas.width - 10, 0);
 
 	    ctx.textAlign = 'left';
