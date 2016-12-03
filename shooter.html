@@ -79,8 +79,8 @@ bgmAudio.play();
 //grobal
 var myX, myY;//参照の仕方わかんないから出しちゃった
 var gameTime;
-var towerMaxNum = 1;
-var towerNum = 1;
+var towerMaxNum = 3;
+var towerNum;
 var myR = 10.0;
 var stage = 1; 
 
@@ -283,10 +283,10 @@ function Enemy(canvas) {
 }
 
 //Tower
-function Tower( canvas ){
+function Tower( canvas , x_ ,y_ ){
 
   var x,y;
-  var r = 30;
+  var r = 20;
   var hp;
 
   var dying = false;
@@ -294,10 +294,23 @@ function Tower( canvas ){
 
     function spawn(){
 	hp = 1000;
-	x = canvas.width / 2;
-	y = canvas.height / 2;
+	x = x_;
+	y = y_;
     };
     spawn();
+
+    this.getX = function(){
+	return x;
+    }
+
+    this.getY = function(){
+	return y;
+    }
+
+    this.getR = function(){
+	return r;
+    }
+
 
     this.draw = function( ctx ){
 	if(dying){
@@ -315,7 +328,7 @@ function Tower( canvas ){
           ctx.arc(x, y, r, 0, Math.PI*2, false);
           ctx.fill();
 
- 	  ctx.font = "30px 'ＭＳ ゴシック'";//～px 文字の大きさ
+ 	  ctx.font = "20px 'ＭＳ ゴシック'";//～px 文字の大きさ
           ctx.fillStyle = 'black';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -324,6 +337,7 @@ function Tower( canvas ){
     }
 
     this.update = function(){
+
 	if( hp <= 0 ){
 	    this.die();
 	}
@@ -366,8 +380,13 @@ function Tower( canvas ){
 }
 
 function init(canvas, n) {
+    towerNum = towerMaxNum;
+
     towers = [];
-    towers.push(new Tower( canvas ));
+    towers.push(new Tower( canvas ,canvas.width/2,canvas.height/2 ));//1つはセンターに直
+    for (var i = 0; i < towerNum - 1; i++) {
+        towers.push(new Tower(canvas,canvas.width*Math.random(),(canvas.height-50)));
+    }
 
     enemies = []; 
     for (var i = 0; i < n; i++) {
@@ -470,7 +489,7 @@ window.onload = function() {
             })();
             break; // intentionally fall through
         case Status.countDown:
-	    gameTime = 60*60;
+	    gameTime = 30*60;
             msg = "" + count;
             drawPlayer = true;
 	    drawOther = true;
@@ -484,9 +503,8 @@ window.onload = function() {
             break;
         case Status.gameClear:
             msg = 'STAGE CLEAR!!!';
-            drawEnemies = true;
+            drawEnemies = false;
             drawPlayer = true;
-	    drawOther = true;
             drawStatus = true;
             break;
         case Status.dying:
@@ -543,10 +561,9 @@ window.onload = function() {
             enemy.draw(ctx);
             if (status != Status.inGame) return;
             if ((enemy.isAlive() && enemy.hit(myX, myY, myR) 
-		|| enemy.bulletsHit(myX, myY, myR))){
-                
-                //status = Status.dying;
-                
+		|| enemy.bulletsHit(myX, myY, myR)) || towerNum == 0){
+
+                status = Status.dying;
             }
         });
 
@@ -562,7 +579,7 @@ window.onload = function() {
 	  gameTime -= 1;
 
 	 if(gameTime % 50 == 0){
-	   //enemies.push(new Enemy(canvas));
+	   enemies.push(new Enemy(canvas));
 	 }
 
 	  if( gameTime <= 0  ){
@@ -596,8 +613,23 @@ window.onload = function() {
         towers.forEach(function(tower) {
             tower.update();
             tower.draw(ctx);
-
         });
+
+//
+      drawEnemies && enemies.forEach(function(enemy) {
+        towers.forEach(function(tower) {
+
+	var x = tower.getX();
+	var y = tower.getY();
+	var r = tower.getR();
+	
+            if ((enemy.bulletsHit( x,y,r ))){
+		tower.damage();
+            }
+         });
+      });
+
+//
 
 	//ステータスとか
         if (drawStatus) {
@@ -609,6 +641,7 @@ window.onload = function() {
                 status = Status.gameClear;
                 muteSE = true;
 		stage++;
+	        towerMaxNum++;
             }
 
 	    
@@ -636,7 +669,7 @@ window.onload = function() {
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(msg, canvas.width/2, canvas.height/4);
+            ctx.fillText(msg, canvas.width/2, canvas.height/8);
         }
 
         ctx.restore();
