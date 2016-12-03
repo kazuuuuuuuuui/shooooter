@@ -77,6 +77,8 @@ bgmAudio.play();
 
 
 //grobal
+var myX, myY;//参照の仕方わかんないから出しちゃった
+var gameTime;
 var towerMaxNum = 1;
 var towerNum = 1;
 var myR = 10.0;
@@ -88,17 +90,17 @@ var towers = [];
 function Enemy(canvas) {
 
     var img = new Array();
-    img[0] = new Image();
-    img[0].src = "150264c6d523fe4adadf40f118c7ce1a.png";
+    img[2] = new Image();
+    img[2].src = "150264c6d523fe4adadf40f118c7ce1a.png";
     img[1] = new Image();
     img[1].src = "150264c6d523fe4adadf40f118c7ce1b.png";
-    img[2] = new Image();
-    img[2].src = "150264c6d523fe4adadf40f118c7ce1c.png";
+    img[0] = new Image();
+    img[0].src = "150264c6d523fe4adadf40f118c7ce1c.png";
 
     var x, y;
     var vx, vy;
 
-    var life = 3;
+    var life = 1;
     var dying = false;
     var explode = new Explode();
 
@@ -117,9 +119,9 @@ function Enemy(canvas) {
     spawn();
 
     var lifeProp = [];
-    lifeProp[3] = { color: 'yellow',  fireP: 0.001, numB:  4, daze: 0 };
+    lifeProp[1] = { color: 'yellow',  fireP: 0.001, numB:  1, daze: 0 };
     lifeProp[2] = { color: 'blue', fireP: 0.005, numB: 10, daze: 2 };
-    lifeProp[1] = { color: 'red',    fireP: 0.01,  numB: 20, daze: 5 };
+    lifeProp[3] = { color: 'red',    fireP: 0.01,  numB: 20, daze: 5 };
 
     this.draw = function(ctx) {
 
@@ -151,7 +153,7 @@ function Enemy(canvas) {
             var vx = 300*Math.cos(th);
             var vy = 100*Math.sin(th);
 
-            var bullet = { x: x, y: y, vx: vx, vy: vy, life: 5 };
+            var bullet = { x: x, y: y, vx: vx, vy: vy, life: 2 };
             bullets.push(bullet);
         }
         playSE(enemyShotAudio);
@@ -223,24 +225,25 @@ function Enemy(canvas) {
         var tick = Date.now();
         var dt = tick - lastTick;
         if (0 < life) {
-
-           
-
-            x += dt*vx/1000;
-            x += lifeProp[life].daze*Math.cos(th);
-            th += 1.5*dt*2*Math.PI/1000;
-            y += dt*vy/1000;
-/*
-            if (x < -er
-            || canvas.width + er < x
-            || canvas.height + er < y) {
-                spawn();
-            }
-*/
+	    var dx = (canvas.width/2 - x);
+	    var dy = (canvas.height/2 - y)
+	    var d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
+//console.log(d);
+	    if( d >= 100 ){//100は近さ
+              var spd = 0.001;
+              x += dx * spd;
+              y += dy * spd;
+	    }
         }
         bullets.forEach(function(bullet) {
-            bullet.x += dt*bullet.vx/1000;
-            bullet.y += dt*bullet.vy/1000;
+            var dx = canvas.width /2 - x;
+            var dy = canvas.height /2 - y;
+	    //bullet.x += dt*bullet.vx/1000;
+            //bullet.y += dt*bullet.vy/1000;
+	    var speed = 0.01;
+	    bullet.x += dx*speed;
+            bullet.y += dy*speed;
+
             bullet.life -= dt/1000/1.0;
         });
 
@@ -254,7 +257,6 @@ function Enemy(canvas) {
 
         if (dying) return;
 
-	    hit++; 
         dying = true;
         playSE(explosionAudio);
         explode.reset();
@@ -284,6 +286,7 @@ function Enemy(canvas) {
 function Tower( canvas ){
 
   var x,y;
+  var r = 30;
   var hp;
 
   var dying = false;
@@ -309,7 +312,7 @@ function Tower( canvas ){
 	    ctx.fillStyle = 'rgb(0,255,0)'
 	  }
 
-          ctx.arc(x, y, 30, 0, Math.PI*2, false);
+          ctx.arc(x, y, r, 0, Math.PI*2, false);
           ctx.fill();
 
  	  ctx.font = "30px 'ＭＳ ゴシック'";//～px 文字の大きさ
@@ -321,11 +324,23 @@ function Tower( canvas ){
     }
 
     this.update = function(){
-	//hp--;
 	if( hp <= 0 ){
 	    this.die();
 	}
     }
+
+    this.hit = function(tx, ty, tr) {
+        var dx = tx - x;
+        var dy = ty - y;
+        if (dx*dx + dy*dy < (r + tr)*(r + tr)) {
+            return true;
+        }
+        return false;
+    };
+
+    this.damage = function() {
+	hp--;
+    };
 
     this.die = function() {
 	if (dying) return;
@@ -337,14 +352,13 @@ function Tower( canvas ){
 }
 
 function init(canvas, n) {
-    //enemies = [];
+    towers = [];
+    towers.push(new Tower( canvas ));
+
+    enemies = []; 
     for (var i = 0; i < n; i++) {
         enemies.push(new Enemy(canvas));
     }
-
-    towers.push(new Tower( canvas ));
-console.log(towers[0].x);
-
 }
 
 window.onload = function() {
@@ -360,7 +374,7 @@ window.onload = function() {
     var status = Status.title;
 
     var count;
-    var myX, myY;
+    //var myX, myY;
     var otherX, otherY;
     var bullets, lastShoot;
     var explode = new Explode();
@@ -424,11 +438,9 @@ window.onload = function() {
             numEnemies = 1;//敵の数
             break;
         case Status.toStart:
-            myX = canvas.width/4;
+            myX = canvas.width/2;
             myY = 4*canvas.height/5;
-            otherX = canvas.width - canvas.width/4;
-            otherY = 4*canvas.height/5; 
-		
+           	
 	    bullets = [];
             init(canvas, numEnemies);
             status = Status.countDown;
@@ -444,6 +456,7 @@ window.onload = function() {
             })();
             break; // intentionally fall through
         case Status.countDown:
+	    gameTime = 60*60;
             msg = "" + count;
             drawPlayer = true;
 	    drawOther = true;
@@ -510,17 +523,16 @@ window.onload = function() {
 	//敵
         drawEnemies && enemies.forEach(function(enemy) {
             enemy.update();
-            if (enemy.isAlive()) {
+            if (enemy.isAlive() && gameTime > 0 ) {
                 enemy.fireAtRandom();
             }
             enemy.draw(ctx);
             if (status != Status.inGame) return;
             if ((enemy.isAlive() && enemy.hit(myX, myY, myR) 
 		|| enemy.bulletsHit(myX, myY, myR))){
-                //explode.reset();
-                //enemy.die();
+                
                 //status = Status.dying;
-                //playSE(deadAudio);
+                
             }
         });
 
@@ -532,6 +544,17 @@ window.onload = function() {
         if(drawPlayer) {
 	  ctx.drawImage(player1_Img,myX - player1_Img.width / 2,myY - player1_Img.height / 2);
         }
+	if(status == Status.inGame && gameTime > 0){
+	  gameTime -= 1;
+
+	 if(gameTime % 50 == 0){
+	   enemies.push(new Enemy(canvas));
+	 }
+
+	  if( gameTime <= 0  ){
+	     gameTime = 0;
+	  }
+	}
 
         bullets && bullets.forEach(function(bullet) {
             if (!bullet.inUse) return;
@@ -557,9 +580,13 @@ window.onload = function() {
 
 	//タワー
         towers.forEach(function(tower) {
-                tower.update();
-                tower.draw(ctx);
-               // tower.isHit(myX, myY, myR);
+            tower.update();
+            tower.draw(ctx);
+/*
+            if(tower.hit(myX, myY, myR)){
+	      tower.damage();
+            }
+*/
         });
 
 	//ステータスとか
@@ -567,13 +594,21 @@ window.onload = function() {
             var remainingEnemies = enemies.filter(function(enemy) {
                 return enemy.isAlive();
             }).length;
-	    
+/*
             if (status == Status.inGame && remainingEnemies <= 0 ) {
 	    
                 status = Status.gameClear;
                 muteSE = true;
 		stage++;
             }
+*/
+
+	    if (status == Status.inGame && gameTime <= 0 ) {
+                status = Status.gameClear;
+                muteSE = true;
+		stage++;
+            }
+
 	    
             ctx.font = '20pt Calibri';
             ctx.fillStyle = 'black';
@@ -581,6 +616,13 @@ window.onload = function() {
             ctx.textBaseline = 'top';
             var s = "Tower: " + towerNum+"/"+towerMaxNum;    
             ctx.fillText(s, canvas.width - 10, 0);
+
+	    ctx.font = '20pt Calibri';
+            ctx.fillStyle = 'black';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
+            var s = "Time:"+Math.floor(gameTime/60);    
+            ctx.fillText(s, canvas.width - 10, 30);
 
 	    ctx.textAlign = 'left';
 	    var ss = "Stage: " + stage;
@@ -592,7 +634,7 @@ window.onload = function() {
             ctx.fillStyle = 'black';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(msg, canvas.width/2, canvas.height/2);
+            ctx.fillText(msg, canvas.width/2, canvas.height/4);
         }
 
         ctx.restore();
