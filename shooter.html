@@ -70,7 +70,7 @@ var bullet_Img = new Image();
 //bgImg.src = 'hubble_friday_05062016.jpg';
 bgImg.src = '20141211215757_094de000_bbcd00_1024.png';
 
-player1_Img.src = '5596310i.png';
+player1_Img.src = 'ziki.png';
 
 bgmAudio.loop = 'true';
 bgmAudio.play();
@@ -338,6 +338,20 @@ function Tower( canvas ){
         return false;
     };
 
+
+    this.bulletsHit = function(tx, ty, r) {
+        for (var i = 0; i < bullets.length; i++) {
+            var bullet = bullets[i];
+            var dx = tx - bullet.x;
+            var dy = ty - bullet.y;
+            if (dx*dx + dy*dy < (br + r)*(br + r)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+
     this.damage = function() {
 	hp--;
     };
@@ -548,7 +562,7 @@ window.onload = function() {
 	  gameTime -= 1;
 
 	 if(gameTime % 50 == 0){
-	   enemies.push(new Enemy(canvas));
+	   //enemies.push(new Enemy(canvas));
 	 }
 
 	  if( gameTime <= 0  ){
@@ -582,11 +596,7 @@ window.onload = function() {
         towers.forEach(function(tower) {
             tower.update();
             tower.draw(ctx);
-/*
-            if(tower.hit(myX, myY, myR)){
-	      tower.damage();
-            }
-*/
+
         });
 
 	//ステータスとか
@@ -594,14 +604,6 @@ window.onload = function() {
             var remainingEnemies = enemies.filter(function(enemy) {
                 return enemy.isAlive();
             }).length;
-/*
-            if (status == Status.inGame && remainingEnemies <= 0 ) {
-	    
-                status = Status.gameClear;
-                muteSE = true;
-		stage++;
-            }
-*/
 
 	    if (status == Status.inGame && gameTime <= 0 ) {
                 status = Status.gameClear;
