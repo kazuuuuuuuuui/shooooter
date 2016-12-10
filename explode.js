@@ -14,7 +14,7 @@ function Explode() {
             self._engage(img);
         };
         // http://darkcodeddata.deviantart.com/art/Fire-Adept-180018860
-        img.src = 'freeze_by_darkcodeddata-d2z8g8x.png';
+        img.src = 'fire_adept_by_darkcodeddata-d2z6ffw.png';
     }
 }
 
@@ -23,9 +23,9 @@ Explode.prototype._engage = function(img) {
     "use strict";
 
     var sw = img.width/5;
-    var sh = img.height/2;
+    var sh = img.height/6;
     var uvs = [];
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 6; i++) {
         for (var j = 0; j < 5; j++) {
             uvs.push({ u: j*sw, v: i*sh });
         }
